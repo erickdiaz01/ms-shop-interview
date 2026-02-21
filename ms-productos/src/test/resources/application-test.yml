@@ -1,0 +1,12 @@
+spring:
+  flyway:
+    enabled: false
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: ""   # sin JWT en tests — usamos solo API Key
+app:
+  security:
+    api-key: test-api-key
+    api-key-header: X-Service-Api-Key

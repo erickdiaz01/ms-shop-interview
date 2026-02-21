@@ -1,0 +1,79 @@
+server:
+  port: 8080
+  shutdown: graceful
+
+spring:
+  application:
+    name: ms-productos
+  r2dbc:
+    url: r2dbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:productos_db}
+    username: ${DB_USER:productos_user}
+    password: ${DB_PASSWORD:productos_pass}
+    pool:
+      initial-size: 5
+      max-size: 20
+      max-idle-time: 30m
+      validation-query: SELECT 1
+  flyway:
+    enabled: true
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:productos_db}
+    user: ${DB_USER:productos_user}
+    password: ${DB_PASSWORD:productos_pass}
+    locations: classpath:db/migration
+    baseline-on-migrate: true
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+      acks: all
+      retries: 3
+      properties:
+        enable.idempotence: true
+        max.in.flight.requests.per.connection: 1
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      show-details: always
+      probes:
+        enabled: true
+  tracing:
+    sampling:
+      probability: ${TRACING_SAMPLE_RATE:1.0}
+  otlp:
+    tracing:
+      endpoint: ${OTEL_ENDPOINT:http://localhost:4318/v1/traces}
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+
+logging:
+  level:
+    com.company: ${LOG_LEVEL:DEBUG}
+    org.springframework.security: DEBUG
+    org.springframework.r2dbc: WARN
+    com.company.productos.infrastructure.adapter.out.kafka: DEBUG
+    com.company.productos.infrastructure.adapter.out.persistence: DEBUG
+
+app:
+  security:
+    api-key: ${SERVICE_API_KEY:dev-secret-productos-key}
+    api-key-header: X-Service-Api-Key
+  kafka:
+    topics:
+      product-events: product.events
+    outbox-poll-ms: ${OUTBOX_POLL_MS:5000}
+
+
