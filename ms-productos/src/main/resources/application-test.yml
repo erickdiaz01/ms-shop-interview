@@ -1,0 +1,12 @@
+spring:
+  flyway:
+    enabled: false
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: http://localhost:8090/realms/company
+app:
+  security:
+    api-key: test-api-key
+    api-key-header: X-Service-Api-Key

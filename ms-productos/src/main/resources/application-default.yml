@@ -1,0 +1,13 @@
+# ─── Perfil local (mvn spring-boot:run sin Docker) ──────────────────────────
+# JWT desactivado: jwk-set-uri vacio → solo funciona API Key
+# Base de datos en localhost con puertos locales
+
+app:
+  security:
+    jwk-set-uri:    ""
+    jwt-issuer-uri: ""
+
+logging:
+  level:
+    com.company:              DEBUG
+    org.springframework.security: DEBUG

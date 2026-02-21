@@ -1,0 +1,28 @@
+# ─── Perfil Docker ──────────────────────────────────────────────────────────────
+# Activo cuando SPRING_PROFILES_ACTIVE=docker (Docker Compose)
+spring:
+  r2dbc:
+    url: r2dbc:postgresql://${DB_HOST:postgres-productos}:5432/${DB_NAME:productos_db}
+  flyway:
+    url: jdbc:postgresql://${DB_HOST:postgres-productos}:5432/${DB_NAME:productos_db}
+  # NO configurar spring.security.oauth2.resourceserver.jwt.issuer-uri aqui.
+  # El JwtDecoder se construye manualmente en SecurityConfig usando JWK_SET_URI
+  # y JWT_ISSUER_URI para resolver el split entre red interna y externa de Docker.
+
+logging:
+  level:
+    com.company:              INFO
+    org.springframework.security: WARN
+    org.springframework.r2dbc: WARN
+
+management:
+  tracing:
+    sampling:
+      probability: 1.0
+
+app:
+  security:
+    # URL interna Docker: para descargar las claves publicas de Keycloak (JWKS)
+    jwk-set-uri:    ${JWK_SET_URI:http://keycloak:8080/realms/microservicios/protocol/openid-connect/certs}
+    # URL publica: debe coincidir con el claim 'iss' del JWT que recibe Postman
+    jwt-issuer-uri: ${JWT_ISSUER_URI:http://localhost:8180/realms/microservicios}
