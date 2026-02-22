@@ -32,3 +32,5 @@ target
 
 /ms-inventario/build
 /ms-productos/build
+
+microservicios-key.pem
