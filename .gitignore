@@ -26,4 +26,6 @@ replay_pid*
 .idea
 target
 
-.gradle
+# Project exclude paths
+/ms-inventario/.gradle/
+/ms-productos/.gradle/
