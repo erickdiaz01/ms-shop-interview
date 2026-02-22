@@ -1,0 +1,36 @@
+# Allow ms-inventario to call ms-productos
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-inventario-to-productos
+  namespace: ms-inventory
+spec:
+  podSelector:
+    matchLabels:
+      app: ms-productos
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              app: ms-inventario
+      ports:
+        - protocol: TCP
+          port: 8080
+    - from:
+        - podSelector:
+            matchLabels:
+              app: api-gateway
+      ports:
+        - protocol: TCP
+          port: 8080
+---
+# Default deny all ingress within namespace
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: default-deny-ingress
+  namespace: ms-inventory
+spec:
+  podSelector: {}
+  policyTypes:
+    - Ingress
