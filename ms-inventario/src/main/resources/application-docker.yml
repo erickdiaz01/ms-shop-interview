@@ -1,0 +1,23 @@
+# ─── Perfil Docker ──────────────────────────────────────────────────────────────
+spring:
+  r2dbc:
+    url: r2dbc:postgresql://${DB_HOST:postgres-inventario}:5432/${DB_NAME:inventario_db}
+  flyway:
+    url: jdbc:postgresql://${DB_HOST:postgres-inventario}:5432/${DB_NAME:inventario_db}
+
+logging:
+  level:
+    com.company:              INFO
+    org.springframework.security: WARN
+    org.springframework.kafka: INFO
+    org.springframework.r2dbc: WARN
+
+management:
+  tracing:
+    sampling:
+      probability: 1.0
+
+app:
+  security:
+    jwk-set-uri:    ${JWK_SET_URI:http://keycloak:8080/realms/microservicios/protocol/openid-connect/certs}
+    jwt-issuer-uri: ${JWT_ISSUER_URI:http://localhost:8180/realms/microservicios}

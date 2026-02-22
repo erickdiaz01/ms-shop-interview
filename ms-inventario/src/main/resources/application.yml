@@ -1,0 +1,95 @@
+server:
+  port: 8081
+  shutdown: graceful
+
+spring:
+  application:
+    name: ms-inventario
+  r2dbc:
+    url: r2dbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5433}/${DB_NAME:inventario_db}
+    username: ${DB_USER:inventario_user}
+    password: ${DB_PASSWORD:inventario_pass}
+    pool:
+      initial-size: 5
+      max-size: 20
+      max-idle-time: 30m
+      validation-query: SELECT 1
+  flyway:
+    enabled: true
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5433}/${DB_NAME:inventario_db}
+    user: ${DB_USER:inventario_user}
+    password: ${DB_PASSWORD:inventario_pass}
+    locations: classpath:db/migration
+    baseline-on-migrate: true
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+      acks: all
+      retries: 3
+      properties:
+        enable.idempotence: true
+        max.in.flight.requests.per.connection: 1
+    consumer:
+      group-id: ${KAFKA_CONSUMER_GROUP:ms-inventario-group}
+      auto-offset-reset: earliest
+      enable-auto-commit: false
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      show-details: always
+      probes:
+        enabled: true
+  tracing:
+    sampling:
+      probability: ${TRACING_SAMPLE_RATE:1.0}
+  otlp:
+    tracing:
+      endpoint: ${OTEL_ENDPOINT:http://localhost:4318/v1/traces}
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+
+logging:
+  level:
+    com.company: ${LOG_LEVEL:DEBUG}
+    org.springframework.security: DEBUG
+    org.springframework.kafka: INFO
+    org.springframework.r2dbc: WARN
+
+app:
+  security:
+    api-key: ${SERVICE_API_KEY:dev-secret-inventario-key}
+    api-key-header: X-Service-Api-Key
+  products-service:
+    url: ${PRODUCTOS_SERVICE_URL:http://localhost:8080}
+    api-key: ${PRODUCTOS_API_KEY:dev-secret-productos-key}
+    api-key-header: X-Service-Api-Key
+    timeout-seconds: ${PRODUCTOS_TIMEOUT:5}
+    max-retries: ${PRODUCTOS_MAX_RETRIES:3}
+  kafka:
+    topics:
+      inventory-events: inventory.events
+      purchase-completed: purchase.completed
+      inventory-alerts: inventory.alerts
+      product-events: product.events       # ← consumido desde ms-productos
+    consumer:
+      group-id: ${KAFKA_CONSUMER_GROUP:ms-inventario-group}
+    outbox-poll-ms: ${OUTBOX_POLL_MS:5000}
+  inventory:
+    low-stock-threshold: ${LOW_STOCK_THRESHOLD:5}

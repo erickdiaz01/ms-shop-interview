@@ -1,0 +1,27 @@
+spring:
+  flyway:
+    enabled: false
+  kafka:
+    bootstrap-servers: localhost:9092
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: http://localhost:8090/realms/company
+app:
+  security:
+    api-key: test-api-key
+    api-key-header: X-Service-Api-Key
+  products-service:
+    url: http://localhost:8080
+    api-key: test-productos-api-key
+    api-key-header: X-Service-Api-Key
+    timeout-seconds: 5
+    max-retries: 1
+  kafka:
+    topics:
+      inventory-events: inventory.events
+      purchase-completed: purchase.completed
+      inventory-alerts: inventory.alerts
+  inventory:
+    low-stock-threshold: 5
