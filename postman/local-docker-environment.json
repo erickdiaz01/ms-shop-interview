@@ -1,0 +1,72 @@
+{
+  "id": "local-docker-env",
+  "name": "Local Docker",
+  "values": [
+    {
+      "key": "base_productos",
+      "value": "http://localhost:8080",
+      "enabled": true
+    },
+    {
+      "key": "base_inventario",
+      "value": "http://localhost:8081",
+      "enabled": true
+    },
+    {
+      "key": "keycloak_url",
+      "value": "http://localhost:8180",
+      "enabled": true
+    },
+    {
+      "key": "realm",
+      "value": "microservicios",
+      "enabled": true
+    },
+    {
+      "key": "client_id",
+      "value": "ms-client",
+      "enabled": true
+    },
+    {
+      "key": "client_secret",
+      "value": "ms-client-secret",
+      "enabled": true
+    },
+    {
+      "key": "username",
+      "value": "user@test.com",
+      "enabled": true
+    },
+    {
+      "key": "password",
+      "value": "test123",
+      "enabled": true
+    },
+    {
+      "key": "jwt_token",
+      "value": "",
+      "enabled": true
+    },
+    {
+      "key": "refresh_token",
+      "value": "",
+      "enabled": true
+    },
+    {
+      "key": "product_id",
+      "value": "",
+      "enabled": true
+    },
+    {
+      "key": "api_key_productos",
+      "value": "dev-secret-productos-key",
+      "enabled": true
+    },
+    {
+      "key": "api_key_inventario",
+      "value": "dev-secret-inventario-key",
+      "enabled": true
+    }
+  ],
+  "_postman_variable_scope": "environment"
+}

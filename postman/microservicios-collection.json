@@ -1,0 +1,1109 @@
+{
+  "info": {
+    "name": "Microservicios \u2014 ms-productos + ms-inventario",
+    "_postman_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+    "description": "Coleccion completa para probar ambos microservicios con autenticacion JWT (Keycloak) y API Key.\n\n## Configuracion inicial\n1. Importar esta coleccion en Postman\n2. Seleccionar el environment 'Local Docker'\n3. Ejecutar la request '01 - Login (obtener token)' \u2014 el token se guarda automaticamente en la variable 'jwt_token'\n4. Todas las demas requests ya usan ese token automaticamente\n\n## Usuarios de prueba\n- admin@test.com / admin123 (ROLE_ADMIN, ROLE_USER)\n- user@test.com / test123 (ROLE_USER)\n- service@test.com / service123 (ROLE_SERVICE)",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "base_productos",
+      "value": "http://localhost:8080"
+    },
+    {
+      "key": "base_inventario",
+      "value": "http://localhost:8081"
+    },
+    {
+      "key": "keycloak_url",
+      "value": "http://localhost:8180"
+    },
+    {
+      "key": "realm",
+      "value": "microservicios"
+    },
+    {
+      "key": "client_id",
+      "value": "ms-client"
+    },
+    {
+      "key": "client_secret",
+      "value": "ms-client-secret"
+    },
+    {
+      "key": "username",
+      "value": "user@test.com"
+    },
+    {
+      "key": "password",
+      "value": "test123"
+    },
+    {
+      "key": "jwt_token",
+      "value": ""
+    },
+    {
+      "key": "refresh_token",
+      "value": ""
+    },
+    {
+      "key": "product_id",
+      "value": ""
+    },
+    {
+      "key": "api_key_productos",
+      "value": "dev-secret-productos-key"
+    },
+    {
+      "key": "api_key_inventario",
+      "value": "dev-secret-inventario-key"
+    }
+  ],
+  "item": [
+    {
+      "name": "\ud83d\udd10 Autenticacion (Keycloak)",
+      "item": [
+        {
+          "name": "01 - Login (Resource Owner Password)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "// Guardar tokens automaticamente como variables de coleccion",
+                  "var body = pm.response.json();",
+                  "if (body.access_token) {",
+                  "    pm.collectionVariables.set('jwt_token', body.access_token);",
+                  "    pm.collectionVariables.set('refresh_token', body.refresh_token);",
+                  "    console.log('\u2705 Token guardado. Expira en: ' + body.expires_in + 's');",
+                  "    pm.test('Login exitoso', () => pm.response.to.have.status(200));",
+                  "} else {",
+                  "    pm.test('Login FALLIDO', () => { throw new Error(JSON.stringify(body)); });",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "grant_type",
+                  "value": "password",
+                  "type": "text"
+                },
+                {
+                  "key": "client_id",
+                  "value": "{{client_id}}",
+                  "type": "text"
+                },
+                {
+                  "key": "client_secret",
+                  "value": "{{client_secret}}",
+                  "type": "text"
+                },
+                {
+                  "key": "username",
+                  "value": "{{username}}",
+                  "type": "text"
+                },
+                {
+                  "key": "password",
+                  "value": "{{password}}",
+                  "type": "text"
+                },
+                {
+                  "key": "scope",
+                  "value": "openid profile email",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{keycloak_url}}/realms/{{realm}}/protocol/openid-connect/token",
+              "host": [
+                "{{keycloak_url}}"
+              ],
+              "path": [
+                "realms",
+                "{{realm}}",
+                "protocol",
+                "openid-connect",
+                "token"
+              ]
+            },
+            "description": "Obtiene un JWT usando username/password. El token se guarda automaticamente en la variable 'jwt_token'.\n\nCambia {{username}} y {{password}} en las variables para usar otro usuario."
+          }
+        },
+        {
+          "name": "02 - Login Admin (ROLE_ADMIN)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var body = pm.response.json();",
+                  "if (body.access_token) { pm.collectionVariables.set('jwt_token', body.access_token); console.log('\u2705 Admin token guardado'); }"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "grant_type",
+                  "value": "password"
+                },
+                {
+                  "key": "client_id",
+                  "value": "{{client_id}}"
+                },
+                {
+                  "key": "client_secret",
+                  "value": "{{client_secret}}"
+                },
+                {
+                  "key": "username",
+                  "value": "admin@test.com"
+                },
+                {
+                  "key": "password",
+                  "value": "admin123"
+                },
+                {
+                  "key": "scope",
+                  "value": "openid"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{keycloak_url}}/realms/{{realm}}/protocol/openid-connect/token",
+              "host": [
+                "{{keycloak_url}}"
+              ],
+              "path": [
+                "realms",
+                "{{realm}}",
+                "protocol",
+                "openid-connect",
+                "token"
+              ]
+            }
+          }
+        },
+        {
+          "name": "03 - Refresh Token",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var body = pm.response.json();",
+                  "if (body.access_token) { pm.collectionVariables.set('jwt_token', body.access_token); pm.collectionVariables.set('refresh_token', body.refresh_token); console.log('\u2705 Token renovado'); }"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "grant_type",
+                  "value": "refresh_token"
+                },
+                {
+                  "key": "client_id",
+                  "value": "{{client_id}}"
+                },
+                {
+                  "key": "client_secret",
+                  "value": "{{client_secret}}"
+                },
+                {
+                  "key": "refresh_token",
+                  "value": "{{refresh_token}}"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{keycloak_url}}/realms/{{realm}}/protocol/openid-connect/token",
+              "host": [
+                "{{keycloak_url}}"
+              ],
+              "path": [
+                "realms",
+                "{{realm}}",
+                "protocol",
+                "openid-connect",
+                "token"
+              ]
+            }
+          }
+        },
+        {
+          "name": "04 - Introspect Token (ver claims)",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "client_id",
+                  "value": "{{client_id}}"
+                },
+                {
+                  "key": "client_secret",
+                  "value": "{{client_secret}}"
+                },
+                {
+                  "key": "token",
+                  "value": "{{jwt_token}}"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{keycloak_url}}/realms/{{realm}}/protocol/openid-connect/token/introspect",
+              "host": [
+                "{{keycloak_url}}"
+              ],
+              "path": [
+                "realms",
+                "{{realm}}",
+                "protocol",
+                "openid-connect",
+                "token",
+                "introspect"
+              ]
+            },
+            "description": "Muestra todos los claims del token: sub, realm_access.roles, exp, etc."
+          }
+        },
+        {
+          "name": "05 - Client Credentials (machine-to-machine)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var body = pm.response.json();",
+                  "if (body.access_token) { pm.collectionVariables.set('jwt_token', body.access_token); console.log('\u2705 Service token (client credentials)'); }"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "grant_type",
+                  "value": "client_credentials"
+                },
+                {
+                  "key": "client_id",
+                  "value": "{{client_id}}"
+                },
+                {
+                  "key": "client_secret",
+                  "value": "{{client_secret}}"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{keycloak_url}}/realms/{{realm}}/protocol/openid-connect/token",
+              "host": [
+                "{{keycloak_url}}"
+              ],
+              "path": [
+                "realms",
+                "{{realm}}",
+                "protocol",
+                "openid-connect",
+                "token"
+              ]
+            },
+            "description": "Obtiene token sin usuario (client credentials). Util para servicios automatizados."
+          }
+        }
+      ]
+    },
+    {
+      "name": "\ud83d\udecd\ufe0f ms-productos (:8080)",
+      "item": [
+        {
+          "name": "Health Check (publico)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_productos}}/actuator/health",
+              "host": [
+                "{{base_productos}}"
+              ],
+              "path": [
+                "actuator",
+                "health"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Crear Producto (JWT)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    var id = pm.response.json().data.id;",
+                  "    pm.collectionVariables.set('product_id', id);",
+                  "    console.log('\u2705 Producto creado. ID guardado: ' + id);",
+                  "    pm.test('Producto creado 201', () => pm.response.to.have.status(201));",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Laptop Pro 15\",\n  \"price\": 1299.99,\n  \"description\": \"High-end laptop para desarrollo\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_productos}}/api/v1/products",
+              "host": [
+                "{{base_productos}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "products"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Crear Producto (API Key)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    var id = pm.response.json().data.id;",
+                  "    pm.collectionVariables.set('product_id', id);",
+                  "    console.log('\u2705 ID guardado: ' + id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Service-Api-Key",
+                "value": "{{api_key_productos}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Mouse Ergonomico\",\n  \"price\": 89.99,\n  \"description\": \"Mouse para largas horas de trabajo\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_productos}}/api/v1/products",
+              "host": [
+                "{{base_productos}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "products"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Obtener Producto por ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_productos}}/api/v1/products/{{product_id}}",
+              "host": [
+                "{{base_productos}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "products",
+                "{{product_id}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Listar Productos (paginado)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_productos}}/api/v1/products?page=0&size=10",
+              "host": [
+                "{{base_productos}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "products"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "0"
+                },
+                {
+                  "key": "size",
+                  "value": "10"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "\ud83d\udeab Sin Auth (debe dar 401)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Debe ser 401', () => pm.response.to.have.status(401));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_productos}}/api/v1/products",
+              "host": [
+                "{{base_productos}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "products"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "\ud83d\udce6 ms-inventario (:8081)",
+      "item": [
+        {
+          "name": "Health Check (publico)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_inventario}}/actuator/health",
+              "host": [
+                "{{base_inventario}}"
+              ],
+              "path": [
+                "actuator",
+                "health"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Consultar Inventario del Producto",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "var qty = pm.response.json().data.attributes.quantity;",
+                  "console.log('Stock actual: ' + qty);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_inventario}}/api/v1/inventory/{{product_id}}",
+              "host": [
+                "{{base_inventario}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "inventory",
+                "{{product_id}}"
+              ]
+            },
+            "description": "Esperar ~6 segundos despues de crear el producto para que Kafka procese el evento y cree el stock en 0."
+          }
+        },
+        {
+          "name": "Actualizar Stock",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"quantity\": 50\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_inventario}}/api/v1/inventory/{{product_id}}",
+              "host": [
+                "{{base_inventario}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "inventory",
+                "{{product_id}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Realizar Compra (JWT)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    var attrs = pm.response.json().data.attributes;",
+                  "    console.log('\u2705 Compra exitosa | Total: $' + attrs.totalAmount + ' | Stock restante: ' + attrs.remainingStock);",
+                  "    pm.test('Compra creada 201', () => pm.response.to.have.status(201));",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"productId\": \"{{product_id}}\",\n  \"quantity\": 3\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_inventario}}/api/v1/inventory/purchase",
+              "host": [
+                "{{base_inventario}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "inventory",
+                "purchase"
+              ]
+            }
+          }
+        },
+        {
+          "name": "\ud83d\udeab Compra Stock Insuficiente (422)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Debe ser 422', () => pm.response.to.have.status(422));",
+                  "var code = pm.response.json().errors[0].code;",
+                  "pm.test('Codigo INSUFFICIENT_STOCK', () => pm.expect(code).to.eql('INSUFFICIENT_STOCK'));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"productId\": \"{{product_id}}\",\n  \"quantity\": 99999\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_inventario}}/api/v1/inventory/purchase",
+              "host": [
+                "{{base_inventario}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "inventory",
+                "purchase"
+              ]
+            }
+          }
+        },
+        {
+          "name": "\ud83d\udeab Validacion Fallida (400)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Debe ser 400', () => pm.response.to.have.status(400));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"productId\": \"{{product_id}}\",\n  \"quantity\": -1\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_inventario}}/api/v1/inventory/purchase",
+              "host": [
+                "{{base_inventario}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "inventory",
+                "purchase"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Historial de Compras",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_inventario}}/api/v1/inventory/{{product_id}}/history",
+              "host": [
+                "{{base_inventario}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "inventory",
+                "{{product_id}}",
+                "history"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Compra con API Key (alternativa)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Service-Api-Key",
+                "value": "{{api_key_inventario}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"productId\": \"{{product_id}}\",\n  \"quantity\": 1\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_inventario}}/api/v1/inventory/purchase",
+              "host": [
+                "{{base_inventario}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "inventory",
+                "purchase"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "\ud83d\udd04 Flujo Completo (ejecutar en orden)",
+      "description": "Ejecuta estas requests EN ORDEN para probar el flujo end-to-end completo.\nCada request guarda variables que usa la siguiente.",
+      "item": [
+        {
+          "name": "Step 1: Login",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "grant_type",
+                  "value": "password"
+                },
+                {
+                  "key": "client_id",
+                  "value": "{{client_id}}"
+                },
+                {
+                  "key": "client_secret",
+                  "value": "{{client_secret}}"
+                },
+                {
+                  "key": "username",
+                  "value": "user@test.com"
+                },
+                {
+                  "key": "password",
+                  "value": "test123"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{keycloak_url}}/realms/{{realm}}/protocol/openid-connect/token",
+              "host": [
+                "{{keycloak_url}}"
+              ],
+              "path": [
+                "realms",
+                "{{realm}}",
+                "protocol",
+                "openid-connect",
+                "token"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.collectionVariables.set('jwt_token', pm.response.json().access_token);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Step 2: Crear Producto",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"name\":\"Teclado Mecanico\",\"price\":249.99,\"description\":\"Cherry MX Red\"}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_productos}}/api/v1/products",
+              "host": [
+                "{{base_productos}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "products"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.collectionVariables.set('product_id', pm.response.json().data.id);",
+                  "console.log('ID: ' + pm.collectionVariables.get('product_id'));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Step 3: Esperar Kafka (6s) + Ver Inventario",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_inventario}}/api/v1/inventory/{{product_id}}",
+              "host": [
+                "{{base_inventario}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "inventory",
+                "{{product_id}}"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "setTimeout(() => {}, 6000);"
+                ],
+                "type": "text/javascript"
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var qty = pm.response.json().data.attributes.quantity;",
+                  "pm.test('Stock inicializado en 0', () => pm.expect(qty).to.eql(0));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Step 4: Cargar Stock (50 unidades)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"quantity\":50}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_inventario}}/api/v1/inventory/{{product_id}}",
+              "host": [
+                "{{base_inventario}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "inventory",
+                "{{product_id}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Step 5: Comprar 3 unidades",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"productId\":\"{{product_id}}\",\"quantity\":3}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_inventario}}/api/v1/inventory/purchase",
+              "host": [
+                "{{base_inventario}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "inventory",
+                "purchase"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var rs = pm.response.json().data.attributes.remainingStock;",
+                  "pm.test('Stock restante es 47', () => pm.expect(rs).to.eql(47));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
