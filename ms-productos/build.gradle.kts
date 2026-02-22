@@ -7,7 +7,9 @@ plugins {
 group = "com.company"
 version = "1.0.0"
 java { toolchain { languageVersion = JavaLanguageVersion.of(21) } }
-configurations { compileOnly { extendsFrom(configurations.annotationProcessor.get()) } }
+configurations {
+    compileOnly { extendsFrom(configurations.annotationProcessor.get()) }
+}
 repositories { mavenCentral() }
 dependencies {
     implementation("org.springframework.boot:spring-boot-starter-webflux")
@@ -18,6 +20,7 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-oauth2-resource-server")
     implementation("org.springframework.boot:spring-boot-starter-validation")
     implementation("org.springframework.boot:spring-boot-starter-actuator")
+    implementation("org.springframework.kafka:spring-kafka")                // ← NUEVO: KafkaTemplate + NewTopic
     implementation("io.micrometer:micrometer-registry-prometheus")
     implementation("io.micrometer:micrometer-tracing-bridge-otel")
     implementation("io.opentelemetry:opentelemetry-exporter-otlp")
@@ -31,6 +34,7 @@ dependencies {
     annotationProcessor("org.projectlombok:lombok")
     testImplementation("org.springframework.boot:spring-boot-starter-test")
     testImplementation("org.springframework.security:spring-security-test")
+    testImplementation("org.springframework.kafka:spring-kafka-test")       // ← NUEVO: EmbeddedKafka para tests
     testImplementation("io.projectreactor:reactor-test")
     testImplementation("org.testcontainers:junit-jupiter")
     testImplementation("org.testcontainers:postgresql")

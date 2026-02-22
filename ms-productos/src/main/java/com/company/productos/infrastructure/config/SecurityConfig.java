@@ -53,6 +53,11 @@ import java.util.stream.Collectors;
  * SOLUCION: ReactiveJwtDecoder manual con dos URLs separadas:
  *   jwk-set-uri    = http://keycloak:8080/.../certs  (URL interna: descarga las claves)
  *   jwt-issuer-uri = http://localhost:8180/...        (URL publica: valida claim 'iss')
+ *
+ * TESTS / LOCAL SIN KEYCLOAK:
+ *   Si jwk-set-uri esta vacio, oauth2ResourceServer NO se configura en absoluto.
+ *   Spring no busca ReactiveJwtDecoder → el contexto levanta sin error.
+ *   Solo funciona autenticacion por API Key en ese modo.
  */
 @Configuration
 @EnableWebFluxSecurity
@@ -77,7 +82,8 @@ public class SecurityConfig {
     // ──────────────────────────────────────────────────────────────────────────
     @Bean
     public SecurityWebFilterChain securityFilterChain(ServerHttpSecurity http) {
-        return http
+        // Configuracion base — siempre aplica
+        var chain = http
                 .csrf(ServerHttpSecurity.CsrfSpec::disable)
                 .httpBasic(ServerHttpSecurity.HttpBasicSpec::disable)
                 .formLogin(ServerHttpSecurity.FormLoginSpec::disable)
@@ -96,25 +102,28 @@ public class SecurityConfig {
                         ).permitAll()
                         .anyExchange().authenticated()
                 )
-                .addFilterBefore(apiKeyAuthFilter(), SecurityWebFiltersOrder.AUTHENTICATION)
-                .oauth2ResourceServer(oauth2 -> {
-                    if (jwkSetUri != null && !jwkSetUri.isBlank()) {
-                        // Perfil docker/prod: usar decoder custom con URL interna para JWKS
-                        // y URL publica para validar el claim 'iss' del token
-                        oauth2.jwt(jwt -> jwt
-                                .jwtDecoder(buildJwtDecoder())
-                                .jwtAuthenticationConverter(keycloakJwtConverter())
-                        );
-                    } else {
-                        // Perfil local sin Keycloak: JWT desactivado, solo API Key funciona
-                        oauth2.jwt(jwt -> jwt
-                                .jwtAuthenticationConverter(keycloakJwtConverter())
-                        );
-                    }
-                    oauth2.authenticationEntryPoint(
-                            new HttpStatusServerEntryPoint(HttpStatus.UNAUTHORIZED));
-                })
-                .build();
+                .addFilterBefore(apiKeyAuthFilter(), SecurityWebFiltersOrder.AUTHENTICATION);
+
+        // JWT — solo se configura si hay un jwkSetUri definido (perfil docker/prod).
+        //
+        // POR QUE es un if fuera del builder y no un else dentro:
+        //   Si llamamos .oauth2ResourceServer(oauth2 -> oauth2.jwt(...)) sin decoder
+        //   explicito, Spring busca un bean ReactiveJwtDecoder o la propiedad issuer-uri.
+        //   En tests y local no existe ninguno → NoSuchBeanDefinitionException.
+        //   Al omitir oauth2ResourceServer completamente, Spring no busca nada.
+        //   La autenticacion queda 100% en manos del ApiKeyFilter.
+        if (jwkSetUri != null && !jwkSetUri.isBlank()) {
+            chain.oauth2ResourceServer(oauth2 -> oauth2
+                    .jwt(jwt -> jwt
+                            .jwtDecoder(buildJwtDecoder())
+                            .jwtAuthenticationConverter(keycloakJwtConverter())
+                    )
+                    .authenticationEntryPoint(
+                            new HttpStatusServerEntryPoint(HttpStatus.UNAUTHORIZED))
+            );
+        }
+
+        return chain.build();
     }
 
     // ──────────────────────────────────────────────────────────────────────────
@@ -135,7 +144,7 @@ public class SecurityConfig {
                 return chain.filter(exchange)
                         .contextWrite(ReactiveSecurityContextHolder.withAuthentication(auth));
             }
-            // No hay API Key valida → dejar pasar al JWT filter
+            // No hay API Key valida → dejar pasar al JWT filter (si esta activo)
             return chain.filter(exchange);
         };
     }
@@ -157,9 +166,9 @@ public class SecurityConfig {
                 .build();
 
         List<OAuth2TokenValidator<Jwt>> validators = new ArrayList<>();
-        validators.add(new JwtTimestampValidator());          // valida exp y nbf
+        validators.add(new JwtTimestampValidator());
         if (jwtIssuerUri != null && !jwtIssuerUri.isBlank()) {
-            validators.add(new JwtIssuerValidator(jwtIssuerUri)); // valida claim 'iss'
+            validators.add(new JwtIssuerValidator(jwtIssuerUri));
         }
         decoder.setJwtValidator(new DelegatingOAuth2TokenValidator<>(validators));
         return decoder;
@@ -194,8 +203,8 @@ public class SecurityConfig {
 
             List<GrantedAuthority> authorities = roles.stream()
                     .filter(r -> !r.equals("offline_access")
-                              && !r.equals("uma_authorization")
-                              && !r.startsWith("default-roles-"))
+                            && !r.equals("uma_authorization")
+                            && !r.startsWith("default-roles-"))
                     .map(r -> r.startsWith("ROLE_") ? r : "ROLE_" + r)
                     .map(SimpleGrantedAuthority::new)
                     .collect(Collectors.toList());
@@ -203,7 +212,6 @@ public class SecurityConfig {
             return Flux.fromIterable(authorities);
         };
     }
-
 
     // ──────────────────────────────────────────────────────────────────────────
     // HELPERS

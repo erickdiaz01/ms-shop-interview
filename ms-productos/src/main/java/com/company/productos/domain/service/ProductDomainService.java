@@ -9,6 +9,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -21,15 +22,20 @@ public class ProductDomainService {
 
     public Mono<Product> createProduct(String name, Money price, String description) {
         log.debug("Creating product with name: {}", name);
+
+        // Validar antes de llamar al repositorio — si el nombre es invalido
+        // no tiene sentido hacer una query a la BD
+        if (name == null || name.isBlank()) {
+            return Mono.error(new IllegalArgumentException("Product name cannot be blank"));
+        }
+
         return productRepository.findByName(name)
                 .flatMap(existing -> Mono.<Product>error(new DuplicateProductException(name)))
                 .switchIfEmpty(Mono.defer(() -> {
                     Product product = Product.create(name, price, description);
-                    // Copiar eventos antes de guardar
                     List<DomainEvent> events = new ArrayList<>(product.getDomainEvents());
                     return productRepository.save(product)
                             .map(savedProduct -> {
-                                // Restaurar eventos en la instancia guardada
                                 savedProduct.addDomainEvents(events);
                                 log.debug("Eventos restaurados en producto guardado: {}", savedProduct.getId());
                                 return savedProduct;

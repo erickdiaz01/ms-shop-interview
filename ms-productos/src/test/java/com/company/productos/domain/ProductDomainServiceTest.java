@@ -51,6 +51,8 @@ class ProductDomainServiceTest {
         StepVerifier.create(domainService.createProduct("  ", Money.of(10.0), null))
                 .expectError(IllegalArgumentException.class)
                 .verify();
+        // Verificar que nunca se llamo al repositorio
+        verifyNoInteractions(productRepository);
     }
 
     @Test

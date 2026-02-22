@@ -13,6 +13,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 import java.math.BigDecimal;
+import java.util.UUID;
 
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
@@ -52,7 +53,8 @@ class PurchaseDomainServiceTest {
     void processPurchase_shouldFail_whenInventoryNotFound() {
         when(inventoryRepository.findByProductId(any())).thenReturn(Mono.empty());
 
-        StepVerifier.create(domainService.processPurchase("nonexistent", 1, "corr"))
+        StepVerifier.create(domainService.processPurchase(
+                        UUID.randomUUID().toString(), 1, "corr"))  // ← UUID válido
                 .expectError(InventoryNotFoundException.class)
                 .verify();
     }

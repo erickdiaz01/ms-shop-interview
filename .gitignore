@@ -29,3 +29,6 @@ target
 # Project exclude paths
 /ms-inventario/.gradle/
 /ms-productos/.gradle/
+
+/ms-inventario/build
+/ms-productos/build

@@ -33,35 +33,32 @@ public class InventoryDomainService {
 
         return inventoryRepository.findByProductId(ProductId.of(productId))
                 .switchIfEmpty(Mono.error(new InventoryNotFoundException(productId)))
-                .zipWith(productPort.getProduct(productId))
-                .flatMap(tuple -> {
-                    Inventory inventory = tuple.getT1();
-                    ProductPort.ProductInfo product = tuple.getT2();
-                    BigDecimal unitPrice = product.price();
+                .flatMap(inventory ->                              // ← solo entra si inventory existe
+                        productPort.getProduct(productId)            // ← se llama DESPUÉS, no antes
+                                .flatMap(product -> {
+                                    BigDecimal unitPrice = product.price();
+                                    inventory.purchase(quantity, correlationId);
 
-                    // Domain operation — throws InsufficientStockException if not enough stock
-                    inventory.purchase(quantity, correlationId);
+                                    Purchase purchase = Purchase.create(
+                                            inventory.getProductId().value(), quantity, unitPrice, correlationId);
 
-                    Purchase purchase = Purchase.create(
-                            inventory.getProductId().value(), quantity, unitPrice, correlationId);
+                                    PurchaseCompletedEvent event = new PurchaseCompletedEvent(
+                                            productId, quantity, unitPrice.multiply(BigDecimal.valueOf(quantity)), correlationId);
 
-                    PurchaseCompletedEvent event = new PurchaseCompletedEvent(
-                            productId, quantity, unitPrice.multiply(BigDecimal.valueOf(quantity)), correlationId);
-
-                    // All in one reactive transaction chain
-                    return inventoryRepository.save(inventory)
-                            .then(purchaseRepository.save(purchase))
-                            .then(outboxRepository.save(event))
-                            .thenReturn(new PurchaseResult(
-                                    purchase.getId().toString(),
-                                    productId,
-                                    product.name(),
-                                    quantity,
-                                    unitPrice,
-                                    purchase.getTotalAmount(),
-                                    inventory.getQuantity().value()
-                            ));
-                });
+                                    return inventoryRepository.save(inventory)
+                                            .then(purchaseRepository.save(purchase))
+                                            .then(outboxRepository.save(event))
+                                            .thenReturn(new PurchaseResult(
+                                                    purchase.getId().toString(),
+                                                    productId,
+                                                    product.name(),
+                                                    quantity,
+                                                    unitPrice,
+                                                    purchase.getTotalAmount(),
+                                                    inventory.getQuantity().value()
+                                            ));
+                                })
+                );
     }
 
     public record PurchaseResult(

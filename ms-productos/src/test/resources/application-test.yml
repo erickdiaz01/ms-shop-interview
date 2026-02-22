@@ -1,12 +1,24 @@
-spring:
-  flyway:
-    enabled: false
-  security:
-    oauth2:
-      resourceserver:
-        jwt:
-          issuer-uri: ""   # sin JWT en tests — usamos solo API Key
+# Perfil test: sin BD real, sin Kafka, sin Keycloak
+# JWT desactivado — jwkSetUri vacío hace que SecurityConfig omita oauth2ResourceServer
 app:
   security:
-    api-key: test-api-key
+    api-key:        test-api-key
     api-key-header: X-Service-Api-Key
+    jwk-set-uri:    ""
+    jwt-issuer-uri: ""
+
+spring:
+  r2dbc:
+    url: r2dbc:h2:mem:///testdb;DB_CLOSE_DELAY=-1
+  flyway:
+    enabled: false
+  kafka:
+    bootstrap-servers: localhost:9092  # no se usa en tests unitarios
+
+management:
+  tracing:
+    enabled: false
+
+logging:
+  level:
+    org.springframework.security: WARN
