@@ -1,0 +1,22 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+scrape_configs:
+  - job_name: 'ms-productos'
+    metrics_path: /actuator/prometheus
+    static_configs:
+      - targets: ['ms-productos:8080']
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: instance
+        replacement: ms-productos
+
+  - job_name: 'ms-inventario'
+    metrics_path: /actuator/prometheus
+    static_configs:
+      - targets: ['ms-inventario:8081']
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: instance
+        replacement: ms-inventario
