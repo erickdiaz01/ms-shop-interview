@@ -1,0 +1,160 @@
+{
+  "id": "microservicios",
+  "realm": "microservicios",
+  "displayName": "Microservicios Demo",
+  "enabled": true,
+  "sslRequired": "none",
+  "registrationAllowed": false,
+  "loginWithEmailAllowed": true,
+  "duplicateEmailsAllowed": false,
+  "resetPasswordAllowed": true,
+  "editUsernameAllowed": false,
+  "bruteForceProtected": false,
+  "accessTokenLifespan": 1800,
+  "ssoSessionMaxLifespan": 36000,
+  "roles": {
+    "realm": [
+      {
+        "name": "ROLE_USER",
+        "description": "Usuario regular de la aplicacion",
+        "composite": false
+      },
+      {
+        "name": "ROLE_ADMIN",
+        "description": "Administrador con acceso completo",
+        "composite": false
+      },
+      {
+        "name": "ROLE_SERVICE",
+        "description": "Servicio interno machine-to-machine",
+        "composite": false
+      }
+    ]
+  },
+  "clients": [
+    {
+      "clientId": "ms-client",
+      "name": "Microservicios Client",
+      "description": "Cliente confidencial \u2014 Postman con client_secret",
+      "enabled": true,
+      "clientAuthenticatorType": "client-secret",
+      "secret": "ms-client-secret",
+      "publicClient": false,
+      "bearerOnly": false,
+      "standardFlowEnabled": true,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": true,
+      "serviceAccountsEnabled": true,
+      "protocol": "openid-connect",
+      "redirectUris": [
+        "*"
+      ],
+      "webOrigins": [
+        "*"
+      ],
+      "attributes": {
+        "access.token.lifespan": "1800",
+        "use.refresh.tokens": "true"
+      },
+      "defaultClientScopes": [
+        "profile",
+        "email",
+        "roles",
+        "web-origins"
+      ],
+      "optionalClientScopes": [
+        "address",
+        "phone",
+        "offline_access",
+        "openid"
+      ]
+    },
+    {
+      "clientId": "postman-client",
+      "name": "Postman Public Client (Authorization Code + PKCE)",
+      "enabled": true,
+      "publicClient": true,
+      "bearerOnly": false,
+      "standardFlowEnabled": true,
+      "directAccessGrantsEnabled": true,
+      "serviceAccountsEnabled": false,
+      "protocol": "openid-connect",
+      "redirectUris": [
+        "https://oauth.pstmn.io/v1/callback",
+        "http://localhost/*"
+      ],
+      "webOrigins": [
+        "*"
+      ],
+      "defaultClientScopes": [
+        "profile",
+        "email",
+        "roles",
+        "web-origins"
+      ],
+      "optionalClientScopes": [
+        "address",
+        "phone",
+        "offline_access",
+        "openid"
+      ]
+    }
+  ],
+  "users": [
+    {
+      "username": "user@test.com",
+      "email": "user@test.com",
+      "firstName": "Regular",
+      "lastName": "User",
+      "enabled": true,
+      "emailVerified": true,
+      "credentials": [
+        {
+          "type": "password",
+          "value": "test123",
+          "temporary": false
+        }
+      ],
+      "realmRoles": [
+        "ROLE_USER"
+      ]
+    },
+    {
+      "username": "admin@test.com",
+      "email": "admin@test.com",
+      "firstName": "Admin",
+      "lastName": "User",
+      "enabled": true,
+      "emailVerified": true,
+      "credentials": [
+        {
+          "type": "password",
+          "value": "admin123",
+          "temporary": false
+        }
+      ],
+      "realmRoles": [
+        "ROLE_ADMIN",
+        "ROLE_USER"
+      ]
+    },
+    {
+      "username": "service@test.com",
+      "email": "service@test.com",
+      "firstName": "Service",
+      "lastName": "Account",
+      "enabled": true,
+      "emailVerified": true,
+      "credentials": [
+        {
+          "type": "password",
+          "value": "service123",
+          "temporary": false
+        }
+      ],
+      "realmRoles": [
+        "ROLE_SERVICE"
+      ]
+    }
+  ]
+}
