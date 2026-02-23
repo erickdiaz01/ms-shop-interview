@@ -30,7 +30,7 @@ Sistema de microservicios para gestión de catálogo de productos e inventario, 
 
 ```bash
 # 1. Clonar el repositorio
-git clone https://github.com/tu-usuario/ms-shop-interview.git
+git clone https://github.com/erickdiaz01/ms-shop-interview.git
 cd ms-shop-interview
 
 # 2. Levantar el stack completo

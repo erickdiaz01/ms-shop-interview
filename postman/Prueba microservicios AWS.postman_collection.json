@@ -1,0 +1,289 @@
+{
+  "info": {
+    "_postman_id": "a09a8e8f-2017-4324-aab4-9151c543782e",
+    "name": "Prueba microservicios AWS",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "17958511"
+  },
+  "item": [
+    {
+      "name": "Healthy",
+      "item": [
+        {
+          "name": "Healthy productos",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://{{ipPublicaAWS}}:8080/actuator/health",
+              "protocol": "http",
+              "host": [
+                "{{ipPublicaAWS}}"
+              ],
+              "port": "8080",
+              "path": [
+                "actuator",
+                "health"
+              ]
+            },
+            "description": "Generated from cURL: curl -s http://3.139.77.134:8080/actuator/health"
+          },
+          "response": []
+        },
+        {
+          "name": "Healthy inventario",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://{{ipPublicaAWS}}:8081/actuator/health",
+              "protocol": "http",
+              "host": [
+                "{{ipPublicaAWS}}"
+              ],
+              "port": "8081",
+              "path": [
+                "actuator",
+                "health"
+              ]
+            },
+            "description": "Generated from cURL: curl -s http://3.139.77.134:8081/actuator/health"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Flujo completo",
+      "item": [
+        {
+          "name": "Creacion producto",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.collectionVariables.set('product_id', pm.response.json().data.id);\r",
+                  "console.log('ID: ' + pm.collectionVariables.get('product_id'));"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Service-Api-Key",
+                "value": "dev-secret-productos-key"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"name\": \"Laptop Pro\",\r\n    \"price\": 1299.99,\r\n    \"description\": \"Test AWS\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://{{ipPublicaAWS}}:8080/api/v1/products",
+              "protocol": "http",
+              "host": [
+                "{{ipPublicaAWS}}"
+              ],
+              "port": "8080",
+              "path": [
+                "api",
+                "v1",
+                "products"
+              ]
+            },
+            "description": "Generated from cURL: curl -s -X POST http://3.139.77.134:8080/api/v1/products \\\r\n  -H 'Content-Type: application/json' \\\r\n  -H \"X-Service-Api-Key: dev-secret-productos-key\" \\\r\n  -d '{\"name\":\"Laptop Pro\",\"price\":1299.99,\"description\":\"Test AWS\"}'"
+          },
+          "response": []
+        },
+        {
+          "name": "Inventario por producto",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "setTimeout(() => {}, 6000);"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-Service-Api-Key",
+                "value": "dev-secret-inventario-key"
+              }
+            ],
+            "url": {
+              "raw": "http://{{ipPublicaAWS}}:8081/api/v1/inventory/{{product_id}}",
+              "protocol": "http",
+              "host": [
+                "{{ipPublicaAWS}}"
+              ],
+              "port": "8081",
+              "path": [
+                "api",
+                "v1",
+                "inventory",
+                "{{product_id}}"
+              ]
+            },
+            "description": "Generated from cURL: curl -s http://3.139.77.134:8081/api/v1/inventory/$PRODUCT_ID \\\r\n  -H \"X-Service-Api-Key: dev-secret-inventario-key\""
+          },
+          "response": []
+        },
+        {
+          "name": "Actualizacion de inventario por producto",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Service-Api-Key",
+                "value": "dev-secret-inventario-key"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"quantity\": 50\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://{{ipPublicaAWS}}:8081/api/v1/inventory/{{product_id}}",
+              "protocol": "http",
+              "host": [
+                "{{ipPublicaAWS}}"
+              ],
+              "port": "8081",
+              "path": [
+                "api",
+                "v1",
+                "inventory",
+                "{{product_id}}"
+              ]
+            },
+            "description": "Generated from cURL: curl -s -X PATCH http://3.139.77.134:8081/api/v1/inventory/$PRODUCT_ID \\\r\n  -H 'Content-Type: application/json' \\\r\n  -H \"X-Service-Api-Key: dev-secret-inventario-key\" \\\r\n  -d '{\"quantity\":50}'"
+          },
+          "response": []
+        },
+        {
+          "name": "Compra producto",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Service-Api-Key",
+                "value": "dev-secret-inventario-key"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"productId\": \"{{product_id}}\",\r\n    \"quantity\": 3\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://{{ipPublicaAWS}}:8081/api/v1/inventory/purchase",
+              "protocol": "http",
+              "host": [
+                "{{ipPublicaAWS}}"
+              ],
+              "port": "8081",
+              "path": [
+                "api",
+                "v1",
+                "inventory",
+                "purchase"
+              ]
+            },
+            "description": "Generated from cURL: curl -s -X POST http://3.139.77.134:8081/api/v1/inventory/purchase \\\r\n  -H 'Content-Type: application/json' \\\r\n  -H \"X-Service-Api-Key: dev-secret-inventario-key\" \\\r\n  -d \"{\\\"productId\\\":\\\"$PRODUCT_ID\\\",\\\"quantity\\\":3}\""
+          },
+          "response": []
+        },
+        {
+          "name": "Historial de Compras",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-Service-Api-Key",
+                "value": "dev-secret-inventario-key",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "http://{{ipPublicaAWS}}:8081/api/v1/inventory/{{product_id}}/history?page=0&size=50",
+              "protocol": "http",
+              "host": [
+                "{{ipPublicaAWS}}"
+              ],
+              "port": "8081",
+              "path": [
+                "api",
+                "v1",
+                "inventory",
+                "{{product_id}}",
+                "history"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "0"
+                },
+                {
+                  "key": "size",
+                  "value": "50"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "ipPublicaAWS",
+      "value": "",
+      "type": "default"
+    },
+    {
+      "key": "product_id",
+      "value": ""
+    }
+  ]
+}
